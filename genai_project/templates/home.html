@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gemini Chatbot</title>
+</head>
+<body>
+
+    <h1>Gemini AI Chatbot</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="user_input" value="" placeholder="Ask something..." required>
+        <button type="submit">Send</button>
+    </form>
+
+    <h3>Response:</h3>
+    <p>{{ response }}</p>
+
+</body>
+</html>
