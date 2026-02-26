@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz Review | GovExam AI{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>Score: {{ session.score }}/{{ session.total_questions }}</h1>
+    <p><strong>AI Performance Review:</strong> {{ session.performance_review }}</p>
+    <p><strong>Weak Areas:</strong> {{ weak_summary }}</p>
+</section>
+
+<section class="card">
+    <h2>Question Analysis</h2>
+    {% for item in question_results %}
+        <div class="question-box {% if item.is_correct %}correct{% else %}incorrect{% endif %}">
+            <p><strong>{{ forloop.counter }}. {{ item.question.question_text }}</strong></p>
+            <p>Your answer: {{ item.selected|default:'Not answered' }}</p>
+            <p>Correct answer: {{ item.question.correct_answer }}</p>
+            {% if not item.is_correct %}
+                <p>Explanation: {{ item.question.explanation }}</p>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <a class="btn" href="{% url 'dashboard' %}">Go to Dashboard</a>
+</section>
+{% endblock %}

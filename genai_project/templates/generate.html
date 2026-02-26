@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
 
+{% block title %}Generate Quiz | GovExam AI{% endblock %}
+
 {% block content %}
-<h2>Generate Questions</h2>
-
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn">Generate</button>
-</form>
-
+<section class="card form-card">
+    <h1>AI-Powered Quiz Generator</h1>
+    <p>Enter subject and topics. The AI will generate 20 exam-relevant MCQs.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Generate 20 MCQs</button>
+    </form>
+</section>
 {% endblock %}
