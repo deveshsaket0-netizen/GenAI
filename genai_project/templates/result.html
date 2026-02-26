@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Your Score: {{ score }}/5</h2>
+
+{% for question in questions %}
+    <div class="question-box">
+        <p><strong>{{ question.question_text }}</strong></p>
+        <p>Correct Answer: {{ question.correct_answer }}</p>
+        <p><em>{{ question.explanation }}</em></p>
+    </div>
+    <hr>
+{% endfor %}
+
+<a class="btn" href="{% url 'dashboard' %}">Go to Dashboard</a>
+
+{% endblock %}

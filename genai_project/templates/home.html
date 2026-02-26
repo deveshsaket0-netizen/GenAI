@@ -1,20 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Gemini Chatbot</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-    <h1>Gemini AI Chatbot</h1>
+{% block content %}
+<h1>Welcome to AI Exam Assistant</h1>
+<p>Generate AI-powered MCQs and track your progress.</p>
 
-    <form method="POST">
-        {% csrf_token %}
-        <input type="text" name="user_input" value="" placeholder="Ask something..." required>
-        <button type="submit">Send</button>
-    </form>
+{% if user.is_authenticated %}
+    <a class="btn" href="{% url 'generate' %}">Start Practicing</a>
+{% else %}
+    <a class="btn" href="{% url 'login' %}">Login to Continue</a>
+{% endif %}
 
-    <h3>Response:</h3>
-    <p>{{ response }}</p>
-
-</body>
-</html>
+{% endblock %}
