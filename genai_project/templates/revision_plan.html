@@ -1,8 +1,12 @@
 {% extends 'base.html' %}
 
+{% block title %}Revision Plan | GovExam AI{% endblock %}
+
 {% block content %}
-<h2>7-Day Revision Plan</h2>
-
-<pre>{{ plan }}</pre>
-
+<section class="card">
+    <h1>Personalized Revision Plan</h1>
+    <p><strong>Average Score:</strong> {{ average_score }}</p>
+    <p><strong>Weak Topics:</strong> {{ weak_topics }}</p>
+    <pre class="plan-output">{{ plan }}</pre>
+</section>
 {% endblock %}

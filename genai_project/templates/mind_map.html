@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Mind Map | GovExam AI{% endblock %}
+
+{% block content %}
+<section class="card form-card">
+    <h1>AI Mind Map Generator</h1>
+    <p>Generate a structured concept map for your chosen subject/topic.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Generate Mind Map</button>
+    </form>
+</section>
+
+{% if generated_map %}
+<section class="card">
+    <h2>Generated Mind Map</h2>
+    <pre class="plan-output">{{ generated_map }}</pre>
+    <a class="btn" href="data:text/plain;charset=utf-8,{{ generated_map|urlencode }}" download="mind-map.txt">Download</a>
+</section>
+{% endif %}
+
+<section class="card">
+    <h2>Saved Mind Maps</h2>
+    <ul class="list-clean">
+        {% for item in history %}
+            <li>{{ item.created_at|date:"d M Y" }} — {{ item.subject }} / {{ item.topic }}</li>
+        {% empty %}
+            <li>No saved mind maps yet.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 
+{% block title %}Login | GovExam AI{% endblock %}
+
 {% block content %}
-<h2>Login</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Login</button>
-</form>
+<section class="card form-card auth-card">
+    <h1>Login</h1>
+    <p>Sign in to continue your government exam preparation.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Login</button>
+    </form>
+</section>
 {% endblock %}
