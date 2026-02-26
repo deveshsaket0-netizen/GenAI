@@ -1,56 +1,20 @@
 {% extends 'base.html' %}
 
-{% block title %}Home | GovExam AI{% endblock %}
+{% block title %}Home | AI Exam Assistant{% endblock %}
 
 {% block content %}
-<section class="card profile-summary">
-    <div>
-        <h1>Welcome, {{ profile.full_name|default:user.username }}</h1>
-        <p>Your adaptive AI assistant for government exam preparation.</p>
+<section class="card hero">
+    <p class="eyebrow">Study smarter with AI</p>
+    <h1>Welcome to AI Exam Assistant</h1>
+    <p>Generate AI-powered MCQs, test your understanding, and keep exam prep focused with practice and feedback in one place.</p>
+
+    <div class="actions">
+        {% if user.is_authenticated %}
+            <a class="btn" href="{% url 'generate' %}">Start Practicing</a>
+        {% else %}
+            <a class="btn" href="{% url 'login' %}">Login to Continue</a>
+        {% endif %}
+        <a class="btn btn-ghost" href="{% url 'revision_plan' %}">View Revision Plan</a>
     </div>
-    {% if profile.profile_photo %}
-        <img class="avatar" src="{{ profile.profile_photo }}" alt="Profile photo">
-    {% else %}
-        <div class="avatar avatar-placeholder">{{ user.username|first|upper }}</div>
-    {% endif %}
-</section>
-
-<section class="card">
-    <h2>Current Exam Target</h2>
-    <form method="post" class="inline-form">
-        {% csrf_token %}
-        <select name="target_exam">
-            <option {% if profile.target_exam == 'UPSC' %}selected{% endif %}>UPSC</option>
-            <option {% if profile.target_exam == 'SSC' %}selected{% endif %}>SSC</option>
-            <option {% if profile.target_exam == 'Banking' %}selected{% endif %}>Banking</option>
-            <option {% if profile.target_exam == 'Railways' %}selected{% endif %}>Railways</option>
-            <option {% if profile.target_exam == 'State PSC' %}selected{% endif %}>State PSC</option>
-        </select>
-        <button type="submit" class="btn">Update Exam</button>
-    </form>
-</section>
-
-<section class="card">
-    <h2>Quick Navigation</h2>
-    <div class="quick-grid">
-        <a class="quick-link" href="{% url 'dashboard' %}">Dashboard</a>
-        <a class="quick-link" href="{% url 'generate' %}">Quiz Page</a>
-        <a class="quick-link" href="{% url 'mind_map' %}">Mind Map Page</a>
-        <a class="quick-link" href="{% url 'revision_plan' %}">Revision Plan Page</a>
-        <a class="quick-link" href="{% url 'profile_settings' %}">Profile Settings</a>
-    </div>
-</section>
-
-<section class="card">
-    <h2>Recent Quiz Activity</h2>
-    {% if latest_sessions %}
-        <ul class="list-clean">
-            {% for item in latest_sessions %}
-                <li>{{ item.created_at|date:"d M Y" }} — {{ item.subject }} — Score {{ item.score }}/{{ item.total_questions }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No quiz history yet. Start your first AI-generated quiz.</p>
-    {% endif %}
 </section>
 {% endblock %}
