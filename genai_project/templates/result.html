@@ -1,17 +1,19 @@
 {% extends 'base.html' %}
 
+{% block title %}Results | AI Exam Assistant{% endblock %}
+
 {% block content %}
-<h2>Your Score: {{ score }}/5</h2>
+<section class="card">
+    <h2 class="section-title">Your Score: {{ score }}/5</h2>
 
-{% for question in questions %}
-    <div class="question-box">
-        <p><strong>{{ question.question_text }}</strong></p>
-        <p>Correct Answer: {{ question.correct_answer }}</p>
-        <p><em>{{ question.explanation }}</em></p>
-    </div>
-    <hr>
-{% endfor %}
+    {% for question in questions %}
+        <div class="question-box">
+            <p><strong>{{ forloop.counter }}. {{ question.question_text }}</strong></p>
+            <p><span class="label">Correct Answer:</span> {{ question.correct_answer }}</p>
+            <p><em>{{ question.explanation }}</em></p>
+        </div>
+    {% endfor %}
 
-<a class="btn" href="{% url 'dashboard' %}">Go to Dashboard</a>
-
+    <a class="btn" href="{% url 'dashboard' %}">Go to Dashboard</a>
+</section>
 {% endblock %}

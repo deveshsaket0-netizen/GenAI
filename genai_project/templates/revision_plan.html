@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
 
+{% block title %}Revision Plan | AI Exam Assistant{% endblock %}
+
 {% block content %}
-<h2>7-Day Revision Plan</h2>
-
-<pre>{{ plan }}</pre>
-
+<section class="card">
+    <h2 class="section-title">7-Day Revision Plan</h2>
+    <p class="section-copy">Follow this generated plan to stay consistent and exam-ready.</p>
+    <pre class="plan-output">{{ plan }}</pre>
+</section>
 {% endblock %}
