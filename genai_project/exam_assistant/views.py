@@ -104,6 +104,9 @@ def generate(request):
                 )
 
                 for q in questions_data:
+                    correct = (q.get("correct_answer", "A") or "A").upper()[0]
+                    if correct not in {"A", "B", "C", "D"}:
+                        correct = "A"
                     Question.objects.create(
                         quiz_session=quiz_session,
                         exam=exam,
@@ -182,6 +185,7 @@ def quiz(request, session_id):
 
     return render(request, "quiz.html", {"questions": questions, "session": session})
 
+    return render(request, "quiz.html", {"questions": questions, "session": session})
 
 @login_required
 def dashboard(request):

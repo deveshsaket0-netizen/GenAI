@@ -105,6 +105,7 @@ p {
     padding: 2rem;
     background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
+.quick-link:hover { border-color: var(--accent); }
 
 .eyebrow {
     text-transform: uppercase;
