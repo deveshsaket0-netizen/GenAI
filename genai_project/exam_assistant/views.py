@@ -1,7 +1,6 @@
 from collections import Counter
 from datetime import timedelta
 
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, redirect, render
@@ -55,7 +54,6 @@ def home(request):
     if request.method == "POST":
         profile.target_exam = request.POST.get("target_exam", profile.target_exam)
         profile.save(update_fields=["target_exam"])
-        messages.success(request, "Target exam updated.")
         return redirect("home")
 
     latest_sessions = QuizSession.objects.filter(user=request.user).order_by("-created_at")[:5]
@@ -77,7 +75,6 @@ def profile_settings(request):
         form = ProfileForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
-            messages.success(request, "Profile updated successfully.")
             return redirect("home")
     else:
         form = ProfileForm(instance=profile)
@@ -103,7 +100,7 @@ def generate(request):
                     subject=subject,
                     topics=topics,
                     difficulty=difficulty,
-                    total_questions=len(questions_data),
+                    total_questions=20,
                 )
 
                 for q in questions_data:
@@ -121,15 +118,10 @@ def generate(request):
                         option_b=q.get("option_b", ""),
                         option_c=q.get("option_c", ""),
                         option_d=q.get("option_d", ""),
-                        correct_answer=correct,
+                        correct_answer=(q.get("correct_answer", "A") or "A")[0],
                         explanation=q.get("explanation", ""),
                     )
                 return redirect("quiz", session_id=quiz_session.id)
-
-            messages.error(
-                request,
-                "Could not generate questions. Check GEMINI_API_KEY/.env or try again.",
-            )
     else:
         form = GenerateForm(initial={"exam": profile.target_exam})
 
@@ -193,6 +185,7 @@ def quiz(request, session_id):
 
     return render(request, "quiz.html", {"questions": questions, "session": session})
 
+    return render(request, "quiz.html", {"questions": questions, "session": session})
 
 @login_required
 def dashboard(request):
@@ -272,6 +265,7 @@ def revision_plan(request):
 
     weak_topic_counter = Counter(
         Attempt.objects.filter(user=request.user, is_correct=False)
+        .select_related("question")
         .values_list("question__topic", flat=True)
     )
     weak_topics = ", ".join([topic for topic, _ in weak_topic_counter.most_common(8)]) or "General revision"

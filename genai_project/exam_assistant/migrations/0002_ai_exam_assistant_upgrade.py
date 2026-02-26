@@ -3,36 +3,6 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
-def backfill_quiz_sessions(apps, schema_editor):
-    User = apps.get_model("auth", "User")
-    QuizSession = apps.get_model("exam_assistant", "QuizSession")
-    Question = apps.get_model("exam_assistant", "Question")
-    Attempt = apps.get_model("exam_assistant", "Attempt")
-
-    default_user = User.objects.order_by("id").first()
-    if default_user is None:
-        default_user = User.objects.create(username="migration_user")
-
-    for question in Question.objects.filter(quiz_session__isnull=True):
-        session = QuizSession.objects.create(
-            user=default_user,
-            exam=question.exam,
-            subject=question.subject,
-            topics=question.topic,
-            difficulty=question.difficulty,
-            score=0,
-            total_questions=1,
-            performance_review="",
-        )
-        question.quiz_session = session
-        question.save(update_fields=["quiz_session"])
-
-    for attempt in Attempt.objects.filter(quiz_session__isnull=True):
-        if attempt.question and attempt.question.quiz_session_id:
-            attempt.quiz_session_id = attempt.question.quiz_session_id
-            attempt.save(update_fields=["quiz_session"])
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -104,45 +74,28 @@ class Migration(migrations.Migration):
             model_name="question",
             name="quiz_session",
             field=models.ForeignKey(
-                null=True,
+                default=1,
                 on_delete=django.db.models.deletion.CASCADE,
                 related_name="questions",
                 to="exam_assistant.quizsession",
             ),
-        ),
-        migrations.AddField(
-            model_name="attempt",
-            name="quiz_session",
-            field=models.ForeignKey(
-                null=True,
-                on_delete=django.db.models.deletion.CASCADE,
-                related_name="attempts",
-                to="exam_assistant.quizsession",
-            ),
-        ),
-        migrations.RunPython(backfill_quiz_sessions, migrations.RunPython.noop),
-        migrations.AlterField(
-            model_name="question",
-            name="quiz_session",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE,
-                related_name="questions",
-                to="exam_assistant.quizsession",
-            ),
-        ),
-        migrations.AlterField(
-            model_name="attempt",
-            name="quiz_session",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE,
-                related_name="attempts",
-                to="exam_assistant.quizsession",
-            ),
+            preserve_default=False,
         ),
         migrations.AlterField(
             model_name="question",
             name="explanation",
             field=models.TextField(blank=True),
+        ),
+        migrations.AddField(
+            model_name="attempt",
+            name="quiz_session",
+            field=models.ForeignKey(
+                default=1,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="attempts",
+                to="exam_assistant.quizsession",
+            ),
+            preserve_default=False,
         ),
         migrations.AlterField(
             model_name="attempt",

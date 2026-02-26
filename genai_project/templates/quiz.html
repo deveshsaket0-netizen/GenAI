@@ -1,24 +1,41 @@
 {% extends 'base.html' %}
 
-{% block title %}Quiz | GovExam AI{% endblock %}
+{% block title %}Quiz | AI Exam Assistant{% endblock %}
 
 {% block content %}
 <section class="card">
-    <h1>{{ session.exam }} Quiz: {{ session.subject }}</h1>
-    <p>Topics: {{ session.topics }} | Difficulty: {{ session.difficulty }}</p>
+    <h2 class="section-title">Quiz</h2>
 
-    <form method="post">
+    <form method="POST">
         {% csrf_token %}
+
         {% for question in questions %}
             <div class="question-box">
                 <p><strong>{{ forloop.counter }}. {{ question.question_text }}</strong></p>
-                <label><input type="radio" name="{{ question.id }}" value="A" required> {{ question.option_a }}</label>
-                <label><input type="radio" name="{{ question.id }}" value="B"> {{ question.option_b }}</label>
-                <label><input type="radio" name="{{ question.id }}" value="C"> {{ question.option_c }}</label>
-                <label><input type="radio" name="{{ question.id }}" value="D"> {{ question.option_d }}</label>
+
+                <label>
+                    <input type="radio" name="{{ question.id }}" value="A" required>
+                    {{ question.option_a }}
+                </label>
+
+                <label>
+                    <input type="radio" name="{{ question.id }}" value="B">
+                    {{ question.option_b }}
+                </label>
+
+                <label>
+                    <input type="radio" name="{{ question.id }}" value="C">
+                    {{ question.option_c }}
+                </label>
+
+                <label>
+                    <input type="radio" name="{{ question.id }}" value="D">
+                    {{ question.option_d }}
+                </label>
             </div>
         {% endfor %}
-        <button type="submit" class="btn">Submit Quiz</button>
+
+        <button type="submit" class="btn">Submit</button>
     </form>
 </section>
 {% endblock %}

@@ -2,10 +2,7 @@ import json
 import os
 from pathlib import Path
 
-try:
-    import google.generativeai as genai
-except Exception:  # pragma: no cover - optional dependency fallback
-    genai = None
+import google.generativeai as genai
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +23,7 @@ def _load_env_file() -> None:
 _load_env_file()
 api_key = os.getenv("GEMINI_API_KEY")
 
-if genai and api_key:
+if api_key:
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel("gemini-1.5-flash")
 else:
