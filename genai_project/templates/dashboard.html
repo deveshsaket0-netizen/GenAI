@@ -1,17 +1,19 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="card">
-    <h2>Your Dashboard</h2>
-    <p>Welcome to your exam preparation control center.</p>
-</div>
+{% block title %}Dashboard | AI Exam Assistant{% endblock %}
 
-<div class="card">
-    <h3>Quick Stats</h3>
-    <ul>
-        <li>Quizzes Taken: 0</li>
-        <li>Topics Covered: 0</li>
-        <li>Revision Plans Created: 0</li>
+{% block content %}
+<section class="card">
+    <h2 class="section-title">Your Dashboard</h2>
+    <p>Welcome to your exam preparation control center.</p>
+</section>
+
+<section class="card">
+    <h3 class="section-title">Quick Stats</h3>
+    <ul class="stats-list">
+        <li>Quizzes Taken: <strong>0</strong></li>
+        <li>Topics Covered: <strong>0</strong></li>
+        <li>Revision Plans Created: <strong>0</strong></li>
     </ul>
-</div>
+</section>
 {% endblock %}

@@ -1,39 +1,41 @@
 {% extends 'base.html' %}
 
+{% block title %}Quiz | AI Exam Assistant{% endblock %}
+
 {% block content %}
-<h2>Quiz</h2>
+<section class="card">
+    <h2 class="section-title">Quiz</h2>
 
-<form method="POST">
-    {% csrf_token %}
+    <form method="POST">
+        {% csrf_token %}
 
-    {% for question in questions %}
-        <div class="question-box">
-            <p><strong>{{ question.question_text }}</strong></p>
+        {% for question in questions %}
+            <div class="question-box">
+                <p><strong>{{ forloop.counter }}. {{ question.question_text }}</strong></p>
 
-            <label>
-                <input type="radio" name="{{ question.id }}" value="A">
-                {{ question.option_a }}
-            </label><br>
+                <label>
+                    <input type="radio" name="{{ question.id }}" value="A" required>
+                    {{ question.option_a }}
+                </label>
 
-            <label>
-                <input type="radio" name="{{ question.id }}" value="B">
-                {{ question.option_b }}
-            </label><br>
+                <label>
+                    <input type="radio" name="{{ question.id }}" value="B">
+                    {{ question.option_b }}
+                </label>
 
-            <label>
-                <input type="radio" name="{{ question.id }}" value="C">
-                {{ question.option_c }}
-            </label><br>
+                <label>
+                    <input type="radio" name="{{ question.id }}" value="C">
+                    {{ question.option_c }}
+                </label>
 
-            <label>
-                <input type="radio" name="{{ question.id }}" value="D">
-                {{ question.option_d }}
-            </label>
-        </div>
-        <hr>
-    {% endfor %}
+                <label>
+                    <input type="radio" name="{{ question.id }}" value="D">
+                    {{ question.option_d }}
+                </label>
+            </div>
+        {% endfor %}
 
-    <button type="submit" class="btn">Submit</button>
-</form>
-
+        <button type="submit" class="btn">Submit</button>
+    </form>
+</section>
 {% endblock %}

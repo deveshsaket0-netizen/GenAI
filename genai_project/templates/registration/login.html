@@ -1,10 +1,15 @@
 {% extends "base.html" %}
 
+{% block title %}Login | AI Exam Assistant{% endblock %}
+
 {% block content %}
-<h2>Login</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Login</button>
-</form>
+<section class="card form-card auth-card">
+    <h2 class="section-title">Login</h2>
+    <p class="section-copy">Sign in to generate questions and track your learning progress.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Login</button>
+    </form>
+</section>
 {% endblock %}
