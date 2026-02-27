@@ -5,12 +5,76 @@
 {% block content %}
 <section class="card form-card">
     <h2 class="section-title">Generate Questions</h2>
-    <p class="section-copy">Choose your topic and difficulty to create a fresh MCQ set.</p>
+    <p class="section-copy">Choose a topic or upload a PDF to create a quiz.</p>
 
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn">Generate</button>
-    </form>
+    {% if error %}
+    <p style="color:red; margin-top:1rem; margin-bottom:1rem;">⚠️ {{ error }}</p>
+    {% endif %}
+
+    <!-- Tab switcher -->
+    <div style="display:flex; gap:8px; margin-bottom:24px;">
+        <button onclick="showTab('topic')" id="tab-topic"
+            style="padding:8px 20px; border-radius:8px; border:2px solid #6366f1;
+                   background:#6366f1; color:#fff; cursor:pointer; font-weight:600;">
+            ✦ By Topic
+        </button>
+        <button onclick="showTab('pdf')" id="tab-pdf"
+            style="padding:8px 20px; border-radius:8px; border:2px solid #6366f1;
+                   background:transparent; color:#6366f1; cursor:pointer; font-weight:600;">
+            📄 Upload PDF
+        </button>
+    </div>
+
+    <!-- Topic form -->
+    <div id="panel-topic">
+        <form method="POST" id="topic-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn" id="topic-btn">
+                <span id="topic-btn-text">Generate</span>
+                <span id="topic-btn-loading" style="display:none;">⏳ Generating…</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- PDF form -->
+    <div id="panel-pdf" style="display:none;">
+        <form method="POST" enctype="multipart/form-data" id="pdf-form">
+            {% csrf_token %}
+            {{ pdf_form.as_p }}
+            <button type="submit" class="btn" id="pdf-btn">
+                <span id="pdf-btn-text">Generate from PDF</span>
+                <span id="pdf-btn-loading" style="display:none;">⏳ Reading PDF…</span>
+            </button>
+        </form>
+    </div>
 </section>
+
+<script>
+function showTab(tab) {
+    document.getElementById('panel-topic').style.display = tab === 'topic' ? 'block' : 'none';
+    document.getElementById('panel-pdf').style.display   = tab === 'pdf'   ? 'block' : 'none';
+    document.getElementById('tab-topic').style.background = tab === 'topic' ? '#6366f1' : 'transparent';
+    document.getElementById('tab-topic').style.color      = tab === 'topic' ? '#fff'    : '#6366f1';
+    document.getElementById('tab-pdf').style.background   = tab === 'pdf'   ? '#6366f1' : 'transparent';
+    document.getElementById('tab-pdf').style.color        = tab === 'pdf'   ? '#fff'    : '#6366f1';
+}
+
+document.getElementById('topic-form').addEventListener('submit', function () {
+    document.getElementById('topic-btn-text').style.display    = 'none';
+    document.getElementById('topic-btn-loading').style.display = 'inline';
+    document.getElementById('topic-btn').disabled = true;
+});
+
+document.getElementById('pdf-form').addEventListener('submit', function () {
+    document.getElementById('pdf-btn-text').style.display    = 'none';
+    document.getElementById('pdf-btn-loading').style.display = 'inline';
+    document.getElementById('pdf-btn').disabled = true;
+});
+
+// If there was an error on PDF tab, re-open that tab
+{% if error and request.FILES.pdf_file %}
+showTab('pdf');
+{% endif %}
+</script>
 {% endblock %}

@@ -6,12 +6,13 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .forms import GenerateForm, MindMapForm, ProfileForm
+from .forms import GenerateForm, MindMapForm, PDFQuizForm, ProfileForm
 from .models import Attempt, MindMap, Question, QuizSession, UserProfile
 from .utils import (
     generate_mind_map,
     generate_performance_review,
     generate_questions,
+    generate_questions_from_pdf,
     generate_revision_plan,
 )
 
@@ -33,7 +34,6 @@ def _calculate_streak(user):
     )
     if not days:
         return 0
-
     streak = 0
     current = timezone.localdate()
     for day in days:
@@ -48,6 +48,28 @@ def _calculate_streak(user):
     return streak
 
 
+def _save_questions_to_db(quiz_session, questions_data, exam, subject, topics, difficulty):
+    """Helper to bulk-create Question objects from a list of dicts."""
+    for q in questions_data:
+        correct = (q.get("correct_answer", "A") or "A").upper()[0]
+        if correct not in {"A", "B", "C", "D"}:
+            correct = "A"
+        Question.objects.create(
+            quiz_session=quiz_session,
+            exam=exam,
+            subject=subject,
+            topic=q.get("topic") or topics,
+            difficulty=difficulty,
+            question_text=q.get("question", ""),
+            option_a=q.get("option_a", ""),
+            option_b=q.get("option_b", ""),
+            option_c=q.get("option_c", ""),
+            option_d=q.get("option_d", ""),
+            correct_answer=correct,
+            explanation=q.get("explanation", ""),
+        )
+
+
 @login_required
 def home(request):
     profile = _get_profile(request.user)
@@ -55,17 +77,8 @@ def home(request):
         profile.target_exam = request.POST.get("target_exam", profile.target_exam)
         profile.save(update_fields=["target_exam"])
         return redirect("home")
-
     latest_sessions = QuizSession.objects.filter(user=request.user).order_by("-created_at")[:5]
-
-    return render(
-        request,
-        "home.html",
-        {
-            "profile": profile,
-            "latest_sessions": latest_sessions,
-        },
-    )
+    return render(request, "home.html", {"profile": profile, "latest_sessions": latest_sessions})
 
 
 @login_required
@@ -84,56 +97,65 @@ def profile_settings(request):
 @login_required
 def generate(request):
     profile = _get_profile(request.user)
+    generate_form = GenerateForm(initial={"exam": profile.target_exam})
+    pdf_form = PDFQuizForm()
+    error = None
+
     if request.method == "POST":
-        form = GenerateForm(request.POST)
-        if form.is_valid():
-            exam = form.cleaned_data["exam"]
-            subject = form.cleaned_data["subject"]
-            topics = form.cleaned_data["topics"]
-            difficulty = form.cleaned_data["difficulty"]
-            questions_data = generate_questions(exam, subject, topics, difficulty)
+        # --- PDF upload path ---
+        if "pdf_file" in request.FILES:
+            pdf_form = PDFQuizForm(request.POST, request.FILES)
+            if pdf_form.is_valid():
+                pdf_bytes = pdf_form.cleaned_data["pdf_file"].read()
+                num_questions = int(pdf_form.cleaned_data["num_questions"])
+                difficulty = pdf_form.cleaned_data["difficulty"]
 
-            if questions_data:
-                quiz_session = QuizSession.objects.create(
-                    user=request.user,
-                    exam=exam,
-                    subject=subject,
-                    topics=topics,
-                    difficulty=difficulty,
-                    total_questions=20,
-                )
+                questions_data = generate_questions_from_pdf(pdf_bytes, num_questions, difficulty)
 
-                for q in questions_data:
-                    correct = (q.get("correct_answer", "A") or "A").upper()[0]
-                    if correct not in {"A", "B", "C", "D"}:
-                        correct = "A"
-                    Question.objects.create(
-                        quiz_session=quiz_session,
+                if not questions_data:
+                    error = "Could not generate questions from the PDF. Check your quota or try a different file."
+                else:
+                    quiz_session = QuizSession.objects.create(
+                        user=request.user,
+                        exam="PDF Upload",
+                        subject="PDF Upload",
+                        topics=pdf_form.cleaned_data["pdf_file"].name,
+                        difficulty=difficulty,
+                        total_questions=len(questions_data),
+                    )
+                    _save_questions_to_db(quiz_session, questions_data, "PDF Upload", "PDF Upload", "PDF", difficulty)
+                    return redirect("quiz", session_id=quiz_session.id)
+
+        # --- Topic-based path ---
+        else:
+            generate_form = GenerateForm(request.POST)
+            if generate_form.is_valid():
+                exam = generate_form.cleaned_data["exam"]
+                subject = generate_form.cleaned_data["subject"]
+                topics = generate_form.cleaned_data["topics"]
+                difficulty = generate_form.cleaned_data["difficulty"]
+
+                questions_data = generate_questions(exam, subject, topics, difficulty)
+
+                if not questions_data:
+                    error = "Could not generate questions — quota may be exceeded. Try uploading a PDF instead, or wait a minute and retry."
+                else:
+                    quiz_session = QuizSession.objects.create(
+                        user=request.user,
                         exam=exam,
                         subject=subject,
-                        topic=q.get("topic") or topics,
+                        topics=topics,
                         difficulty=difficulty,
-                        question_text=q.get("question", ""),
-                        option_a=q.get("option_a", ""),
-                        option_b=q.get("option_b", ""),
-                        option_c=q.get("option_c", ""),
-                        option_d=q.get("option_d", ""),
-                        correct_answer=(q.get("correct_answer", "A") or "A")[0],
-                        explanation=q.get("explanation", ""),
+                        total_questions=len(questions_data),
                     )
-                return redirect("quiz", session_id=quiz_session.id)
-    else:
-        form = GenerateForm(initial={"exam": profile.target_exam})
+                    _save_questions_to_db(quiz_session, questions_data, exam, subject, topics, difficulty)
+                    return redirect("quiz", session_id=quiz_session.id)
 
-    return render(
-        request,
-        "generate.html",
-        {
-            "form": form,
-            "generated_session": generated_session,
-            "generated_questions": generated_questions,
-        },
-    )
+    return render(request, "generate.html", {
+        "form": generate_form,
+        "pdf_form": pdf_form,
+        "error": error,
+    })
 
 
 @login_required
@@ -152,7 +174,6 @@ def quiz(request, session_id):
             score += 1 if is_correct else 0
             if not is_correct:
                 weak_topics.append(question.topic)
-
             Attempt.objects.create(
                 user=request.user,
                 quiz_session=session,
@@ -164,11 +185,7 @@ def quiz(request, session_id):
         session.score = score
         weak_summary = ", ".join([t for t, _ in Counter(weak_topics).most_common(5)]) or "None"
         session.performance_review = generate_performance_review(
-            session.exam,
-            session.subject,
-            score,
-            session.total_questions,
-            weak_summary,
+            session.exam, session.subject, score, session.total_questions, weak_summary,
         )
         session.save(update_fields=["score", "performance_review"])
 
@@ -180,20 +197,14 @@ def quiz(request, session_id):
             }
             for q in questions
         ]
-
-        return render(
-            request,
-            "quiz_result.html",
-            {
-                "session": session,
-                "question_results": question_results,
-                "weak_summary": weak_summary,
-            },
-        )
+        return render(request, "quiz_result.html", {
+            "session": session,
+            "question_results": question_results,
+            "weak_summary": weak_summary,
+        })
 
     return render(request, "quiz.html", {"questions": questions, "session": session})
 
-    return render(request, "quiz.html", {"questions": questions, "session": session})
 
 @login_required
 def dashboard(request):
@@ -211,36 +222,26 @@ def dashboard(request):
         subject: sum(scores) / max(len(scores), 1)
         for subject, scores in subject_scores.items()
     }
-    strong_subjects = sorted(subject_avg, key=subject_avg.get, reverse=True)[:3]
-    weak_subjects = sorted(subject_avg, key=subject_avg.get)[:3]
-
-    activity_history = sessions[:10]
     streak = _calculate_streak(request.user)
-
     chart_labels = list(subject_avg.keys())
     chart_values = [round(subject_avg[key], 2) for key in chart_labels]
 
-    return render(
-        request,
-        "dashboard.html",
-        {
-            "average_score": round(avg_score, 2),
-            "strong_subjects": strong_subjects,
-            "weak_subjects": weak_subjects,
-            "study_streak": streak,
-            "activity_history": activity_history,
-            "chart_labels": chart_labels,
-            "chart_values": chart_values,
-            "top_weak_topics": [topic for topic, _ in weak_topics.most_common(5)],
-        },
-    )
+    return render(request, "dashboard.html", {
+        "average_score": round(avg_score, 2),
+        "strong_subjects": sorted(subject_avg, key=subject_avg.get, reverse=True)[:3],
+        "weak_subjects": sorted(subject_avg, key=subject_avg.get)[:3],
+        "study_streak": streak,
+        "activity_history": sessions[:10],
+        "chart_labels": chart_labels,
+        "chart_values": chart_values,
+        "top_weak_topics": [topic for topic, _ in weak_topics.most_common(5)],
+    })
 
 
 @login_required
 def mind_map(request):
     profile = _get_profile(request.user)
     generated_map = None
-
     if request.method == "POST":
         form = MindMapForm(request.POST)
         if form.is_valid():
@@ -248,21 +249,13 @@ def mind_map(request):
             topic = form.cleaned_data["topic"]
             generated_map = generate_mind_map(profile.target_exam, subject, topic)
             MindMap.objects.create(
-                user=request.user,
-                exam=profile.target_exam,
-                subject=subject,
-                topic=topic,
-                content=generated_map,
+                user=request.user, exam=profile.target_exam,
+                subject=subject, topic=topic, content=generated_map,
             )
     else:
         form = MindMapForm()
-
     history = MindMap.objects.filter(user=request.user).order_by("-created_at")[:10]
-    return render(
-        request,
-        "mind_map.html",
-        {"form": form, "generated_map": generated_map, "history": history},
-    )
+    return render(request, "mind_map.html", {"form": form, "generated_map": generated_map, "history": history})
 
 
 @login_required
@@ -270,21 +263,13 @@ def revision_plan(request):
     profile = _get_profile(request.user)
     sessions = QuizSession.objects.filter(user=request.user)
     avg_score = sessions.aggregate(avg=Avg("score"))["avg"] or 0
-
     weak_topic_counter = Counter(
         Attempt.objects.filter(user=request.user, is_correct=False)
         .select_related("question")
         .values_list("question__topic", flat=True)
     )
-    weak_topics = ", ".join([topic for topic, _ in weak_topic_counter.most_common(8)]) or "General revision"
-
+    weak_topics = ", ".join([t for t, _ in weak_topic_counter.most_common(8)]) or "General revision"
     plan = generate_revision_plan(profile.target_exam, weak_topics, avg_score)
-    return render(
-        request,
-        "revision_plan.html",
-        {
-            "plan": plan,
-            "weak_topics": weak_topics,
-            "average_score": round(avg_score, 2),
-        },
-    )
+    return render(request, "revision_plan.html", {
+        "plan": plan, "weak_topics": weak_topics, "average_score": round(avg_score, 2),
+    })

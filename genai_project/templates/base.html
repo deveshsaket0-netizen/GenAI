@@ -14,7 +14,9 @@
             <a class="logo" href="{% url 'home' %}">AI Exam Assistant</a>
             <div class="nav-links">
                 <a href="{% url 'home' %}">Home</a>
-                <a href="{% url 'generate' %}">Generate</a>
+                {% if session %}
+                    <a href="{% url 'quiz' session.id %}">Start Quiz</a>
+                {% endif %}
                 {% if session %}
                     <a href="{% url 'quiz' session.id %}">Start Quiz</a>
                 {% endif %}
@@ -25,7 +27,7 @@
     </header>
 
     <main class="container">
-        {% block content %}
+        {% block content %}S
         {% endblock %}
     </main>
 </body>
