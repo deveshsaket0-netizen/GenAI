@@ -1,11 +1,19 @@
 {% extends 'base.html' %}
 
-{% block title %}Mind Map | GovExam AI{% endblock %}
+{% block title %}Results | AI Exam Assistant{% endblock %}
 
 {% block content %}
 <section class="card">
-    <h1>This page has been replaced</h1>
-    <p>The old result page is now replaced by the dedicated Mind Map page.</p>
-    <a class="btn" href="{% url 'mind_map' %}">Go to Mind Map</a>
+    <h2 class="section-title">Your Score: {{ score }}/5</h2>
+
+    {% for question in questions %}
+        <div class="question-box">
+            <p><strong>{{ forloop.counter }}. {{ question.question_text }}</strong></p>
+            <p><span class="label">Correct Answer:</span> {{ question.correct_answer }}</p>
+            <p><em>{{ question.explanation }}</em></p>
+        </div>
+    {% endfor %}
+
+    <a class="btn" href="{% url 'dashboard' %}">Go to Dashboard</a>
 </section>
 {% endblock %}
