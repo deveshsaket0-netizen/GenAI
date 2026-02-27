@@ -125,7 +125,15 @@ def generate(request):
     else:
         form = GenerateForm(initial={"exam": profile.target_exam})
 
-    return render(request, "generate.html", {"form": form})
+    return render(
+        request,
+        "generate.html",
+        {
+            "form": form,
+            "generated_session": generated_session,
+            "generated_questions": generated_questions,
+        },
+    )
 
 
 @login_required
