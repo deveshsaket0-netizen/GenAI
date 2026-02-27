@@ -1,12 +1,36 @@
 {% extends 'base.html' %}
 
+{% block title %}Generate Quiz | GovExam AI{% endblock %}
+
 {% block content %}
-<h2>Generate Questions</h2>
+<section class="card form-card">
+    <h1>AI-Powered Quiz Generator</h1>
+    <p>Enter subject and topics. The AI will generate MCQs using your <code>GEMINI_API_KEY</code> from <code>.env</code>.</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn">Generate Interactive MCQs</button>
+    </form>
+</section>
 
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn">Generate</button>
-</form>
+{% if generated_session and generated_questions %}
+<section class="card">
+    <h2>Solve Generated Questions</h2>
+    <p><strong>Exam:</strong> {{ generated_session.exam }} | <strong>Subject:</strong> {{ generated_session.subject }} | <strong>Difficulty:</strong> {{ generated_session.difficulty }}</p>
 
+    <form method="post" action="{% url 'quiz' generated_session.id %}">
+        {% csrf_token %}
+        {% for question in generated_questions %}
+            <div class="question-box">
+                <p><strong>{{ forloop.counter }}. {{ question.question_text }}</strong></p>
+                <label><input type="radio" name="{{ question.id }}" value="A" required> {{ question.option_a }}</label>
+                <label><input type="radio" name="{{ question.id }}" value="B"> {{ question.option_b }}</label>
+                <label><input type="radio" name="{{ question.id }}" value="C"> {{ question.option_c }}</label>
+                <label><input type="radio" name="{{ question.id }}" value="D"> {{ question.option_d }}</label>
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn">Submit Quiz Answers</button>
+    </form>
+</section>
+{% endif %}
 {% endblock %}

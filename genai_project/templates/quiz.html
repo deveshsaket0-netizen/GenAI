@@ -1,39 +1,24 @@
 {% extends 'base.html' %}
 
+{% block title %}Quiz | GovExam AI{% endblock %}
+
 {% block content %}
-<h2>Quiz</h2>
+<section class="card">
+    <h1>{{ session.exam }} Quiz: {{ session.subject }}</h1>
+    <p>Topics: {{ session.topics }} | Difficulty: {{ session.difficulty }}</p>
 
-<form method="POST">
-    {% csrf_token %}
-
-    {% for question in questions %}
-        <div class="question-box">
-            <p><strong>{{ question.question_text }}</strong></p>
-
-            <label>
-                <input type="radio" name="{{ question.id }}" value="A">
-                {{ question.option_a }}
-            </label><br>
-
-            <label>
-                <input type="radio" name="{{ question.id }}" value="B">
-                {{ question.option_b }}
-            </label><br>
-
-            <label>
-                <input type="radio" name="{{ question.id }}" value="C">
-                {{ question.option_c }}
-            </label><br>
-
-            <label>
-                <input type="radio" name="{{ question.id }}" value="D">
-                {{ question.option_d }}
-            </label>
-        </div>
-        <hr>
-    {% endfor %}
-
-    <button type="submit" class="btn">Submit</button>
-</form>
-
+    <form method="post">
+        {% csrf_token %}
+        {% for question in questions %}
+            <div class="question-box">
+                <p><strong>{{ forloop.counter }}. {{ question.question_text }}</strong></p>
+                <label><input type="radio" name="{{ question.id }}" value="A" required> {{ question.option_a }}</label>
+                <label><input type="radio" name="{{ question.id }}" value="B"> {{ question.option_b }}</label>
+                <label><input type="radio" name="{{ question.id }}" value="C"> {{ question.option_c }}</label>
+                <label><input type="radio" name="{{ question.id }}" value="D"> {{ question.option_d }}</label>
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn">Submit Quiz</button>
+    </form>
+</section>
 {% endblock %}
