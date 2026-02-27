@@ -43,11 +43,42 @@ def _call_gemini(prompt: str) -> str:
 
 def _extract_json_list(text: str) -> list:
     cleaned = re.sub(r"```(?:json)?", "", text).replace("```", "").strip()
-    start = cleaned.find("[")
-    end = cleaned.rfind("]")
-    if start == -1 or end == -1:
-        return []
-    return json.loads(cleaned[start:end + 1])
+
+    # First, attempt to parse the whole response directly.
+    try:
+        parsed = json.loads(cleaned)
+        if isinstance(parsed, list):
+            return parsed
+        if isinstance(parsed, dict):
+            for key in ("questions", "data", "items"):
+                value = parsed.get(key)
+                if isinstance(value, list):
+                    return value
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback: try to parse the first array-shaped JSON block.
+    array_match = re.search(r"\[.*\]", cleaned, re.DOTALL)
+    if array_match:
+        try:
+            return json.loads(array_match.group(0))
+        except json.JSONDecodeError:
+            pass
+
+    # Fallback: parse object-shaped JSON and read common container keys.
+    object_match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+    if object_match:
+        try:
+            parsed = json.loads(object_match.group(0))
+            if isinstance(parsed, dict):
+                for key in ("questions", "data", "items"):
+                    value = parsed.get(key)
+                    if isinstance(value, list):
+                        return value
+        except json.JSONDecodeError:
+            pass
+
+    return []
 
 
 def _extract_pdf_text(pdf_bytes: bytes, max_chars: int = 2000) -> str:
