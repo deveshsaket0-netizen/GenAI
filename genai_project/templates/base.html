@@ -15,7 +15,9 @@
             <div class="nav-links">
                 <a href="{% url 'home' %}">Home</a>
                 <a href="{% url 'generate' %}">Generate</a>
-                <a href="{% url 'quiz' %}">Quiz</a>
+                {% if session %}
+                    <a href="{% url 'quiz' session.id %}">Start Quiz</a>
+                {% endif %}
                 <a href="{% url 'dashboard' %}">Dashboard</a>
                 <a href="{% url 'revision_plan' %}">Revision Plan</a>
             </div>
